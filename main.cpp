@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <cstdlib>
 
 using namespace std;
 
@@ -15,10 +16,18 @@ class coordinate{
     public:
 
         coordinate():  file('a') , rank('1'){};
-        coordinate(char pFile, char pRank):  file(pFile) , rank(pRank){};
-        coordinate setCoordinate(char f,char r);
-        coordinate getCoordinate(char f,char r) const;
+        coordinate(char pFile, char pRank):  file(pFile) , rank(pRank){
+            if(pFile > 'h' || pRank > '8' || pRank < '1'){
 
+                cout<< "invalide coordinant";
+                exit(1);
+
+            }
+
+        };
+        coordinate setCoordinate(char f,char r);
+        coordinate getCoordinate() const{return *this;};
+        friend class Board;
     private:
         char file;
         char rank;
@@ -31,8 +40,8 @@ class coordinate{
 class Piece{
     public:
 
-        Piece(): color(-1), type('d'),point(0){};
-        Piece(int pColor,char pType,coordinate pLocation,int pPoint) : color(pColor), type(pType),location(pLocation),point(pPoint){}; 
+        Piece(): color(-1), type('d'),point(0),isUnderAttack(0){};
+        Piece(int pColor,char pType,coordinate pLocation,int pPoint) : color(pColor), type(pType),location(pLocation),point(pPoint),isUnderAttack(0){}; 
         
         static Piece createRook(int pColor,coordinate pLocation) { return Piece(pColor,'r',pLocation,5); };
         static Piece createPawn(int pColor,coordinate pLocation) { return Piece(pColor,'p',pLocation,1); };
@@ -43,13 +52,22 @@ class Piece{
         static Piece createEmpty(coordinate pLocation) { return Piece(2,'e',pLocation,0); };
         
         friend class Board;
-        Piece& moveRook();
-        Piece& movepawn();
-        Piece& moveKnight();
-        Piece& moveBishop();
-        Piece& moveQueen();
+        
+        // if movement is done return 1 , if not return 0
+        int moveRook(coordinate targetLocation);
+        int movepawn(coordinate targetLocation);
+        int moveKnight(coordinate targetLocation);
+        int moveBishop(coordinate targetLocation);
+        int moveQueen(coordinate targetLocation);
 
-        Piece& operator=(const Piece& o);
+        
+        const Piece& operator=(const Piece& o){
+            color = o.color;
+            type = o.type;
+            location = o.location;
+            point = o.point;
+            return *this;
+        };
 
 
     private:
@@ -58,19 +76,20 @@ class Piece{
         char type;
         coordinate location;
         int point;
+        int isUnderAttack;
 };
 
+int Piece::moveBishop(coordinate targetLocation){
+    /* 
+    Bishop has L type movement.
+    */
 
-    Piece& Piece::operator=(const Piece& o){
+    
 
-        color = o.color;
-        type = o.type;
+       
+    
+}
 
-        location = o.location;
-        point = o.point;
-
-        return *this;
-    }
 
 
 
@@ -86,6 +105,16 @@ class Board{
         Board& check();
         int saveToFile();
         void setEmpty();
+        bool checkValidity(Piece checkingP, coordinate targetLocation);
+
+        const vector<Piece>& operator[](int index) const {
+            return pieces[index];
+        }
+        std::vector<Piece>& operator[](int index) {
+
+        return pieces[index];
+
+        }
 
 
     private:
@@ -93,6 +122,89 @@ class Board{
        
        vector<vector<Piece>> pieces; // pieces on 8x8 table.
 };  
+
+
+
+bool Board::checkValidity(Piece checkingP, coordinate targetLocation){
+
+    if(targetLocation.file < 'a' || targetLocation.file > 'h' || targetLocation.rank < '1' || targetLocation.rank > '8'){
+        cout << "target location is out of bond, please enter valid move";
+        return false;
+    }
+
+    // convert coordinant system to vector index for checking piece and target location
+    int cY= checkingP.location.file - '0';
+    int cX = checkingP.location.rank -'0'-7 ; 
+
+    int tY = targetLocation.file - '0';
+    int tX = targetLocation.rank -'0'-7 ; 
+
+
+
+    switch (checkingP.type){
+
+        case 'r':
+                if(targetLocation.file != checkingP.location.file && targetLocation.rank != checkingP.location.rank){
+                    cout << "movement is not valid";
+                    return false;
+                }
+                if(targetLocation.file == checkingP.location.file) {
+                    for(int i=cX;i<tX;i++){
+
+                        if ((*this)[i][tY].type != 'e'){
+                            cout << "movement is not valid";
+                            return false;
+                        }
+                    }
+                if(targetLocation.rank == checkingP.location.rank) {
+                    for(int i=cY;i<tY;i++){
+
+                        if ((*this)[i][tX].type != 'e'){
+                            cout << "movement is not valid";
+                            return false;
+                        }
+                    }
+
+                }
+               else 
+                    return true;
+                         
+                break;
+        case 'k':
+                
+                break;
+        case 'q':
+                break;
+
+        case 'n':
+                if((abs(cX -tX)==1 && abs(cY-tY)==2) ||(abs(cX -tX)==2 && abs(cY-tY)==1) )
+                    return true;
+                else 
+                    false;
+                break;
+
+        case 'b':
+
+                if( abs(cX-tX)== abs(cY-tY))
+                    return true;
+                else  
+                    return false;
+                break;
+
+        case 'p':
+                if(abs(tY-cY)== 1 &&(*this)[tX][tY].type == 'e')
+                    return true;
+                if(abs(tY-cY)== 2 && ( cY == 1 || cY==6  )&& (*this)[tX][tY].type == 'e')
+                    return true;
+                else 
+                    false;    
+                break;
+
+
+    }
+    return 1;
+
+}
 
 Board& Board::init(){
     const vector<char> layout = {'r','n','b','q','k','b','n','r'}; // inital layout for first line 
