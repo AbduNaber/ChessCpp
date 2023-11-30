@@ -17,7 +17,7 @@ class coordinate{
 
         coordinate():  file('a') , rank('1'){};
         coordinate(char pFile, char pRank):  file(pFile) , rank(pRank){
-            if(pFile > 'h' || pRank > '8' || pRank < '1'){
+            if(file <'a' || file > 'h' || rank > '8' || rank < '1'){
 
                 cout<< "invalide coordinant";
                 exit(1);
@@ -26,7 +26,20 @@ class coordinate{
 
         };
         coordinate setCoordinate(char f,char r);
-        coordinate getCoordinate() const{return *this;};
+        vector <char> getCoordinate() const{return {file,rank};};
+        
+
+         vector<int> coordinateToInt() const {
+            
+            // convert coordinant system to vector index for checking piece and target location
+            int y = file - 97;
+            int x = 8- (rank -'0') ; 
+            vector<int> result= {x,y};
+            return result;
+
+        }
+
+
         friend class Board;
     private:
         char file;
@@ -99,9 +112,12 @@ class Board{
     public:
     
         Board(): pieces(8,vector<Piece>(8)){};
+
         Board& init();
+
         void print() const;
-        Board& update();
+
+        Board& update(const coordinate cL, const coordinate tL);
         Board& check();
         int saveToFile();
         void setEmpty();
@@ -132,12 +148,19 @@ bool Board::checkValidity(Piece checkingP, coordinate targetLocation){
         return false;
     }
 
-    // convert coordinant system to vector index for checking piece and target location
-    int cY= checkingP.location.file - '0';
-    int cX = checkingP.location.rank -'0'-7 ; 
 
-    int tY = targetLocation.file - '0';
-    int tX = targetLocation.rank -'0'-7 ; 
+
+
+
+    // convert coordinant system to vector index for checking piece and target location   
+    vector <int> c = checkingP.location.coordinateToInt();
+    vector <int> t = targetLocation.coordinateToInt();
+
+    int cY= c[1];
+    int cX = c[0] ; 
+
+    int tY = t[1];
+    int tX = t[0]; 
 
 
 
@@ -205,11 +228,14 @@ bool Board::checkValidity(Piece checkingP, coordinate targetLocation){
     return 1;
 
 }
+}
 
 Board& Board::init(){
+
+
     const vector<char> layout = {'r','n','b','q','k','b','n','r'}; // inital layout for first line 
     
-    for(auto c:layout){
+    for(auto c : layout){
         switch(c){
             case 'r':
                 pieces[0][0] = Piece::createRook(0,coordinate('a','8'));
@@ -256,6 +282,21 @@ Board& Board::init(){
 }
 
 
+// cL is for piece location that will check , tL is target location
+Board& Board::update(const coordinate cL, const coordinate tL){ 
+    vector <int> currentLoction = cL.coordinateToInt();
+    vector <int> targetLocation = tL.coordinateToInt();
+
+    // write check function in here later
+    if(true){
+
+        (*this).pieces[targetLocation[0]][targetLocation[1]]  =     (*this).pieces[currentLoction[0]][currentLoction[1]] ;
+        (*this).pieces[currentLoction[0]][currentLoction[1]] = Piece::createEmpty(cL);
+
+
+    }
+    return *this;
+}
 void Board::print() const{
 
     for(int i =0;i<8;++i){
@@ -282,5 +323,19 @@ int main(){
     Board board;
     board.init();
     board.print();
+    char cr,cf,tf,tr;
+
+
+
+    cout<< "enter move: ";
+    cin >>cf>>cr>>tf>>tr;
+    coordinate cL(cf,cr);
+    coordinate tL(tf,tr);
+    board.update(cL,tL);
+    board.print();
+
+
+
+
 
 }
