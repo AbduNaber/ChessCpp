@@ -155,9 +155,9 @@ bool Board::checkValidity(Piece checkingP, coordinate targetLocation){
                     i= cX>tX ? tX+1:cX+1 ;
                     stop = cX>tX ? cX:tX; 
                     for(i; i < stop;i++){
-                       
+                        cout <<"asd<"<<i<<stop<<endl;
                         if ((*this)[i][tY].type != 'e'){
-                            
+                            cout <<"2"<<endl;
                             return false;
                         }
                     }
@@ -165,9 +165,9 @@ bool Board::checkValidity(Piece checkingP, coordinate targetLocation){
                     i= cY>tY ? tY+1:cY+1 ;
                     stop = cY>tY ? cY:tY; 
                     for(int i;i<stop;i++){
-
+                        cout <<i<<stop<<endl;    
                         if ((*this)[i][cX].type != 'e'){
-                            
+                            cout <<"1"<<endl;
                             return false;
                         }
                     }
