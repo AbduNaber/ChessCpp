@@ -10,7 +10,6 @@ class coordinate;
 class Piece;
 class Board;
 
-
 class coordinate{
 
     public:
@@ -65,20 +64,13 @@ class Piece{
         static Piece createEmpty(coordinate pLocation) { return Piece(2,'e',pLocation,0); };
         
         friend class Board;
-        
-        // if movement is done return 1 , if not return 0
-        int moveRook(coordinate targetLocation);
-        int movepawn(coordinate targetLocation);
-        int moveKnight(coordinate targetLocation);
-        int moveBishop(coordinate targetLocation);
-        int moveQueen(coordinate targetLocation);
-
-        
+                
         const Piece& operator=(const Piece& o){
             color = o.color;
             type = o.type;
             location = o.location;
             point = o.point;
+            isUnderAttack = o.isUnderAttack;
             return *this;
         };
 
@@ -91,21 +83,6 @@ class Piece{
         int point;
         int isUnderAttack;
 };
-
-int Piece::moveBishop(coordinate targetLocation){
-    /* 
-    Bishop has L type movement.
-    */
-
-    
-
-       
-    
-}
-
-
-
-
 
 class Board{
 
@@ -148,10 +125,6 @@ bool Board::checkValidity(Piece checkingP, coordinate targetLocation){
         return false;
     }
 
-
-
-
-
     // convert coordinant system to vector index for checking piece and target location   
     vector <int> c = checkingP.location.coordinateToInt();
     vector <int> t = targetLocation.coordinateToInt();
@@ -161,71 +134,92 @@ bool Board::checkValidity(Piece checkingP, coordinate targetLocation){
 
     int tY = t[1];
     int tX = t[0]; 
+    int i,stop;
+    if (checkingP.type == (*this)[tX][tY].type ){
+              cout << "is here"<<endl;
+        return false;
+    }
 
 
-
+    
     switch (checkingP.type){
-
+          
         case 'r':
-                if(targetLocation.file != checkingP.location.file && targetLocation.rank != checkingP.location.rank){
-                    cout << "movement is not valid";
+                if(targetLocation.file != checkingP.location.file && targetLocation.rank != checkingP.location.rank ){
+                   
                     return false;
                 }
+        case 'q':
                 if(targetLocation.file == checkingP.location.file) {
-                    for(int i=cX;i<tX;i++){
-
+                    cout << "is in here"<< endl;
+                    i= cX>tX ? tX+1:cX+1 ;
+                    stop = cX>tX ? cX:tX; 
+                    for(i; i < stop;i++){
+                       
                         if ((*this)[i][tY].type != 'e'){
-                            cout << "movement is not valid";
+                            
                             return false;
                         }
                     }
                 if(targetLocation.rank == checkingP.location.rank) {
-                    for(int i=cY;i<tY;i++){
+                    i= cY>tY ? tY+1:cY+1 ;
+                    stop = cY>tY ? cY:tY; 
+                    for(int i;i<stop;i++){
 
-                        if ((*this)[i][tX].type != 'e'){
-                            cout << "movement is not valid";
+                        if ((*this)[i][cX].type != 'e'){
+                            
                             return false;
                         }
                     }
 
                 }
-               else 
+                if(checkingP.type == 'r')
                     return true;
-                         
-                break;
-        case 'k':
-                
-                break;
-        case 'q':
-                break;
+        case 'b':
+                if( abs(cX-tX)== abs(cY-tY)){
+                    for(int x = cX+1 , y = cY+1 ; x < tX && y <tY ; ++x, ++y   ){
+                        if((*this)[x][y].type != 'e'){
+                           
+                            return false;
+                        }
+                    }
+                    return true;
+                    
+                    
+                }
+                else 
+                    return false;
 
+                break;   
+
+        case 'k':
+                if((abs(cX -tX)==1 && abs(cY-tY)==1)|| (abs(cX -tX)==1 && abs(cY-tY)==0)|| (abs(cX -tX)==0 && abs(cY-tY)==1))
+                    return true;
+                else{
+                    return false;
+                }
+
+                break;
         case 'n':
                 if((abs(cX -tX)==1 && abs(cY-tY)==2) ||(abs(cX -tX)==2 && abs(cY-tY)==1) )
                     return true;
                 else 
                     false;
                 break;
-
-        case 'b':
-
-                if( abs(cX-tX)== abs(cY-tY))
-                    return true;
-                else  
-                    return false;
-                break;
-
         case 'p':
-                if(abs(tY-cY)== 1 &&(*this)[tX][tY].type == 'e')
+                cout << "target is "<< (*this)[tX][tY].type << endl;
+                cout << tX<< tY << endl;
+                if(abs(tX-cX)== 1 &&(*this)[tX][tY].type == 'e')
                     return true;
-                if(abs(tY-cY)== 2 && ( cY == 1 || cY==6  )&& (*this)[tX][tY].type == 'e')
+                if(abs(tX-cX)== 2 && ( cY == 1 || cY==6  )&& (*this)[tX][tY].type == 'e')
                     return true;
                 else 
-                    false;    
+                    return false;    
                 break;
 
 
     }
-    return 1;
+    return false;
 
 }
 }
@@ -243,6 +237,7 @@ Board& Board::init(){
                 pieces[7][0] = Piece::createRook(1,coordinate('a','1'));
                 pieces[7][7] = Piece::createRook(1,coordinate('h','1'));
                 break;
+
             case 'n':
                 pieces[0][6] = Piece::createKnight(0,coordinate('g','8'));
                 pieces[0][1] = Piece::createKnight(0,coordinate('b','8'));
@@ -282,15 +277,20 @@ Board& Board::init(){
 }
 
 
-// cL is for piece location that will check , tL is target location
+// cL is current Location , tL is target location
 Board& Board::update(const coordinate cL, const coordinate tL){ 
     vector <int> currentLoction = cL.coordinateToInt();
     vector <int> targetLocation = tL.coordinateToInt();
 
-    // write check function in here later
-    if(true){
 
-        (*this).pieces[targetLocation[0]][targetLocation[1]]  =     (*this).pieces[currentLoction[0]][currentLoction[1]] ;
+    bool test = (*this).checkValidity((*this).pieces[currentLoction[0]][currentLoction[1]],tL);
+    cout << test<<endl;
+
+
+    // write check function in here later
+    if(test){
+
+        (*this).pieces[targetLocation[0]][targetLocation[1]]  =  (*this).pieces[currentLoction[0]][currentLoction[1]] ;
         (*this).pieces[currentLoction[0]][currentLoction[1]] = Piece::createEmpty(cL);
 
 
@@ -321,21 +321,24 @@ void Board::print() const{
 int main(){
 
     Board board;
+
     board.init();
     board.print();
     char cr,cf,tf,tr;
+    while(true){
+            cout<< "enter move: ";
+            cin >>cf>>cr>>tf>>tr;
+            coordinate cL(cf,cr);
+            coordinate tL(tf,tr);
 
 
+            board.update(cL,tL);
+            board.print();
 
-    cout<< "enter move: ";
-    cin >>cf>>cr>>tf>>tr;
-    coordinate cL(cf,cr);
-    coordinate tL(tf,tr);
-    board.update(cL,tL);
-    board.print();
-
-
-
-
+    }
 
 }
+
+
+
+
