@@ -103,6 +103,8 @@ class Board{
         int saveToFile();
         void setEmpty();
         bool checkValidity(Piece checkingP, coordinate targetLocation);
+        void checkUnderAttack() const;
+
 
         const vector<Piece>& operator[](int index) const {
             return pieces[index];
@@ -119,14 +121,48 @@ class Board{
        vector<vector<Piece>> pieces; // pieces on 8x8 table.
 };  
 
+void Board::checkUnderAttack() const{
+
+    vector <int> currentLoction;
+    int x,y;
+    for (vector <Piece> row: pieces){
+        for(Piece p: row){
+            currentLoction = p.location.coordinateToInt();
+            x  =currentLoction[0];
+            y =currentLoction[1];
+            switch(p.type){
+
+                case 'p':
+                    if( p.location.file != 'a'){
+                       
+
+                    }
+                    if(p.location.file != 'h'){
+
+                    }
+                case 'r':
+
+                case 'n':
+
+                case 'b':
+
+                case 'q':
+
+                case 'k':
+
+            }
+        }
+    }
+}
+
+
+
 bool Board::checkValidity(Piece checkingP, coordinate targetLocation){
 
     if(targetLocation.file < 'a' || targetLocation.file > 'h' || targetLocation.rank < '1' || targetLocation.rank > '8'){
         cout << "target location is out of bond, please enter valid move";
         return false;
     }
-
-   
 
     // convert coordinant system to vector index for checking piece and target location   
     vector <int> c = checkingP.location.coordinateToInt();
@@ -139,22 +175,19 @@ bool Board::checkValidity(Piece checkingP, coordinate targetLocation){
     int tX = t[0]; 
 
     
-    
     int i;
     int stop = cY>tY ? cY:tY; 
 
     if (checkingP.color == (*this)[tX][tY].color || checkingP.type == 'e'){
-
+        cout << "target is same piece or you choosed empty piece"<<endl;
         return false;
     }
 
-
-    cout << checkingP<<endl;
     switch (checkingP.type){
           
         case 'r':
                 if(targetLocation.file != checkingP.location.file && targetLocation.rank != checkingP.location.rank ){
-                   
+                    cout << "piece and target not same line vertically and horizontally"<<endl;
                     return false;
                 }
         case 'q':
@@ -165,7 +198,7 @@ bool Board::checkValidity(Piece checkingP, coordinate targetLocation){
                     for(i = cX>tX ? tX+1:cX+1; i < stop;i++){
                         
                         if ((*this)[i][tY].type != 'e'){
-
+                            cout << "between two pieces is not empty"<<endl;    
                             return false;
                         }
                     }
@@ -175,7 +208,7 @@ bool Board::checkValidity(Piece checkingP, coordinate targetLocation){
                     for(i=cY>tY ? tY+1:cY+1;i<stop;i++){
    
                         if ((*this)[cX][i].type != 'e'){
-
+                            cout << "between two pieces is not empty"<<endl;
                             return false;
                         }
                     }
@@ -192,20 +225,23 @@ bool Board::checkValidity(Piece checkingP, coordinate targetLocation){
   
                     for (int i = 1; i < abs(cX - tX); ++i) {
                         if ((*this)[cX + i * x][cY + i * y].type != 'e') 
+                            cout << "between two pieces is not empty"<<endl;
                             return false;
                     }
                         return true;
                 } 
-                else 
+                else {
+                    cout << "two pieces are not diagonal"<<endl;
                     return false;
-                
-                
+                }
+              
                 break;   
 
         case 'k':
                 if((abs(cX -tX)==1 && abs(cY-tY)==1)|| (abs(cX -tX)==1 && abs(cY-tY)==0)|| (abs(cX -tX)==0 && abs(cY-tY)==1))
                     return true;
                 else{
+                    cout << "target move is not 1 suqare away"<<endl;
                     return false;
                 }
 
@@ -217,12 +253,14 @@ bool Board::checkValidity(Piece checkingP, coordinate targetLocation){
                     return true;
                 }
                     
-                else 
+                else {
+                    cout << "Knight movement is not L"<<endl;
                     return false;
+                }
+                    
                 break;
         case 'p':
-                cout <<cX<<cY;
-                cout<< abs(tX-cX)<<" "<<cY<<endl;
+                
                 if(abs(tX-cX)== 1 &&(*this)[tX][tY].type == 'e'){
 
                     return true;
@@ -232,10 +270,9 @@ bool Board::checkValidity(Piece checkingP, coordinate targetLocation){
                                         
                     return true;
                 }
-
+                cout << "pawn movement is not legal"<<endl;
                 return false;    
                 break;
-
 
     }
     return false;
