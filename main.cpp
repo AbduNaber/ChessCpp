@@ -52,15 +52,15 @@ class coordinate{
 class Piece{
     public:
 
-        Piece(): color(-1), type('d'),point(0.0),isUnderAttack(0){};
-        Piece(int pColor,char pType,coordinate pLocation,double pPoint) : color(pColor), type(pType),location(pLocation),point(pPoint),isUnderAttack(0){}; 
+        Piece(): color(-1), type('d'),point(0.0),isUnderAttack(false){};
+        Piece(int pColor,char pType,coordinate pLocation,double pPoint) : color(pColor), type(pType),location(pLocation),point(pPoint),isUnderAttack(false){}; 
         
         static Piece createRook(int pColor,coordinate pLocation) { return Piece(pColor,'r',pLocation,5); };
         static Piece createPawn(int pColor,coordinate pLocation) { return Piece(pColor,'p',pLocation,1); };
         static Piece createKnight(int pColor,coordinate pLocation) { return Piece(pColor,'n',pLocation,3); };
         static Piece createBishop(int pColor,coordinate pLocation) { return Piece(pColor,'b',pLocation,3); };
         static Piece createQueen(int pColor,coordinate pLocation) { return Piece(pColor,'q',pLocation,9); };
-        static Piece createKing(int pColor,coordinate pLocation) { return Piece(pColor,'k',pLocation,0); };
+        static Piece createKing(int pColor,coordinate pLocation) { return Piece(pColor,'k',pLocation,999); };
         static Piece createEmpty(coordinate pLocation) { return Piece(2,'e',pLocation,0); };
         
         friend class Board;
@@ -85,7 +85,7 @@ class Piece{
         char type;
         coordinate location;
         double point;
-        int isUnderAttack;
+        bool isUnderAttack ;
 };
 
 class Board{
@@ -103,7 +103,7 @@ class Board{
         int saveToFile();
         void setEmpty();
         bool checkValidity(Piece checkingP, coordinate targetLocation);
-        void checkUnderAttack() const;
+        void checkUnderAttack() ;
 
 
         const vector<Piece>& operator[](int index) const {
@@ -121,25 +121,43 @@ class Board{
        vector<vector<Piece>> pieces; // pieces on 8x8 table.
 };  
 
-void Board::checkUnderAttack() const{
+void Board::checkUnderAttack() {
 
     vector <int> currentLoction;
-    int x,y;
+    int tX = currentLoction[0];
+    int tY = currentLoction[1];
     for (vector <Piece> row: pieces){
         for(Piece p: row){
+
             currentLoction = p.location.coordinateToInt();
-            x  =currentLoction[0];
-            y =currentLoction[1];
+            
             switch(p.type){
 
                 case 'p':
-                    if( p.location.file != 'a'){
-                       
+                    
+                        if( p.location.file != 'a'){
+                            if(p.color == 0){
+                                if((*this)[tX+1][tY+1].type != 'e'){
+                                    (*this)[tX+1][tY+1].isUnderAttack = true;
+                                    (*this)[tX+1][tY+1].point = (*this)[tX+1][tY+1].point/2.0;
+                                }
 
-                    }
-                    if(p.location.file != 'h'){
+                            }
+                            else if (p.color == 1){
 
-                    }
+                            }         
+                        }
+                        if(p.location.file != 'h'){
+                            if(p.color == 0){
+                                    
+                            }
+                            else if (p.color == 1){
+
+                            }    
+                        }
+
+                    
+                    
                 case 'r':
 
                 case 'n':
