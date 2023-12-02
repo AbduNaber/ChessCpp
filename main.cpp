@@ -37,7 +37,10 @@ class coordinate{
             return result;
 
         }
-
+        friend ostream&  operator<<(ostream& out, const coordinate& c) {
+            out << "f: "<< c.file <<" r: "<<c.rank << endl; 
+            return out;
+        }
 
         friend class Board;
     private:
@@ -45,9 +48,6 @@ class coordinate{
         char rank;
     
 };
-
-
-
 
 class Piece{
     public:
@@ -73,7 +73,11 @@ class Piece{
             isUnderAttack = o.isUnderAttack;
             return *this;
         };
+         friend ostream&  operator<<(ostream& out, const Piece& p) {
+            out << p.type << " "<< p.location ;
+            return out;
 
+         }
 
     private:
         // 0: black , 1:white,  2:empty
@@ -94,7 +98,7 @@ class Board{
 
         void print() const;
 
-        Board& update(const coordinate cL, const coordinate tL);
+        bool update(const coordinate cL, const coordinate tL);
         Board& check();
         int saveToFile();
         void setEmpty();
@@ -111,12 +115,9 @@ class Board{
 
 
     private:
-       
-       
+           
        vector<vector<Piece>> pieces; // pieces on 8x8 table.
 };  
-
-
 
 bool Board::checkValidity(Piece checkingP, coordinate targetLocation){
 
@@ -124,6 +125,8 @@ bool Board::checkValidity(Piece checkingP, coordinate targetLocation){
         cout << "target location is out of bond, please enter valid move";
         return false;
     }
+
+   
 
     // convert coordinant system to vector index for checking piece and target location   
     vector <int> c = checkingP.location.coordinateToInt();
@@ -134,17 +137,19 @@ bool Board::checkValidity(Piece checkingP, coordinate targetLocation){
 
     int tY = t[1];
     int tX = t[0]; 
-        
 
+    
+    
+    int i;
+    int stop = cY>tY ? cY:tY; 
 
-    int i,stop;
     if (checkingP.color == (*this)[tX][tY].color || checkingP.type == 'e'){
 
         return false;
     }
 
 
-    
+    cout << checkingP<<endl;
     switch (checkingP.type){
           
         case 'r':
@@ -153,24 +158,24 @@ bool Board::checkValidity(Piece checkingP, coordinate targetLocation){
                     return false;
                 }
         case 'q':
+ 
                 if(targetLocation.file == checkingP.location.file) {
-                    
-                    i= cX>tX ? tX+1:cX+1 ;
-                    stop = cX>tX ? cX:tX; 
-                    for(i; i < stop;i++){
+
+
+                    for(i = cX>tX ? tX+1:cX+1; i < stop;i++){
                         
                         if ((*this)[i][tY].type != 'e'){
-                            
+
                             return false;
                         }
                     }
+                }    
                 if(targetLocation.rank == checkingP.location.rank) {
-                    i= cY>tY ? tY+1:cY+1 ;
-                    stop = cY>tY ? cY:tY; 
-                    for(int i;i<stop;i++){
-                        cout <<i<<stop<<endl;    
-                        if ((*this)[i][cX].type != 'e'){
-                           
+                    
+                    for(i=cY>tY ? tY+1:cY+1;i<stop;i++){
+   
+                        if ((*this)[cX][i].type != 'e'){
+
                             return false;
                         }
                     }
@@ -179,20 +184,22 @@ bool Board::checkValidity(Piece checkingP, coordinate targetLocation){
                 if(checkingP.type == 'r')
                     return true;
         case 'b':
-                if( abs(cX-tX)== abs(cY-tY)){
-                    for(int x = cX+1 , y = cY+1 ; x < tX && y <tY ; ++x, ++y   ){
-                        if((*this)[x][y].type != 'e'){
-                           
+               
+                if (abs(cX - tX) == abs(cY - tY)) {
+
+                    int x = cX < tX ? 1 : -1;
+                    int y = cY < tY ? 1 : -1;
+  
+                    for (int i = 1; i < abs(cX - tX); ++i) {
+                        if ((*this)[cX + i * x][cY + i * y].type != 'e') 
                             return false;
-                        }
                     }
-                    return true;
-                    
-                    
-                }
+                        return true;
+                } 
                 else 
                     return false;
-
+                
+                
                 break;   
 
         case 'k':
@@ -204,31 +211,28 @@ bool Board::checkValidity(Piece checkingP, coordinate targetLocation){
 
                 break;
         case 'n':
-                if((abs(cX -tX)==1 && abs(cY-tY)==2) ||(abs(cX -tX)==2 && abs(cY-tY)==1) )
+
+                if((abs(cX -tX)==1 && abs(cY-tY)==2) ||(abs(cX -tX)==2 && abs(cY-tY)==1) ){
+
                     return true;
+                }
+                    
                 else 
-                    false;
+                    return false;
                 break;
         case 'p':
-                
-                cout << cY <<cX << endl;
-                cout << tY <<tX << endl;
-
-                
-                cout << (*this)[tX][tY].type << endl;
-                cout << abs(tX-cX) << endl;
+                cout <<cX<<cY;
+                cout<< abs(tX-cX)<<" "<<cY<<endl;
                 if(abs(tX-cX)== 1 &&(*this)[tX][tY].type == 'e'){
-                                        cout << "2test"<<endl;
-                    cout << "is here "<< endl ;
+
                     return true;
                 }
 
-                if(abs(tX-cX)== 2 && ( cY == 1 || cY==6  )&& (*this)[tX][tY].type == 'e'){
-                                        cout << "1test"<<endl;
+                if(abs(tX-cX)== 2 && ( cX == 1 || cX==6  )&& (*this)[tX][tY].type == 'e'){
+                                        
                     return true;
                 }
 
-                cout << "test"<<endl;
                 return false;    
                 break;
 
@@ -236,7 +240,6 @@ bool Board::checkValidity(Piece checkingP, coordinate targetLocation){
     }
     return false;
 
-}
 }
 
 Board& Board::init(){
@@ -256,8 +259,8 @@ Board& Board::init(){
             case 'n':
                 pieces[0][6] = Piece::createKnight(0,coordinate('g','8'));
                 pieces[0][1] = Piece::createKnight(0,coordinate('b','8'));
-                pieces[7][6] = Piece::createKnight(1,coordinate('b','1'));
-                pieces[7][1] = Piece::createKnight(1,coordinate('g','1'));
+                pieces[7][6] = Piece::createKnight(1,coordinate('g','1'));
+                pieces[7][1] = Piece::createKnight(1,coordinate('b','1'));
                 break;
             case 'b':
                 pieces[0][2] = Piece::createBishop(0,coordinate('c','8'));
@@ -283,34 +286,32 @@ Board& Board::init(){
 
     }
     for (int i= 2 ; i<6;++i)
-        for(int j =0;j<8;++j)
-            pieces[i][j] = Piece::createEmpty(coordinate('a'+j,6-i+'0'));
+        for(int j =0;j<8;++j){
+            
+            pieces[i][j] = Piece::createEmpty(coordinate('a'+j,8-i+'0'));
+        }
+            
     
 
         
     return *this;
 }
-
-
 // cL is current Location , tL is target location
-Board& Board::update(const coordinate cL, const coordinate tL){ 
+bool Board::update(const coordinate cL, const coordinate tL){
+
     vector <int> currentLoction = cL.coordinateToInt();
     vector <int> targetLocation = tL.coordinateToInt();
 
-
     bool test = (*this).checkValidity((*this).pieces[currentLoction[0]][currentLoction[1]],tL);
-    cout << test<<endl;
-
 
     // write check function in here later
     if(test){
 
+        (*this).pieces[currentLoction[0]][currentLoction[1]].location = (*this).pieces[targetLocation[0]][targetLocation[1]] .location;
         (*this).pieces[targetLocation[0]][targetLocation[1]]  =  (*this).pieces[currentLoction[0]][currentLoction[1]] ;
         (*this).pieces[currentLoction[0]][currentLoction[1]] = Piece::createEmpty(cL);
-
-
     }
-    return *this;
+    return test;
 }
 void Board::print() const{
 
@@ -330,7 +331,15 @@ void Board::print() const{
 
         }
         cout << endl;
-    }  
+    } 
+    cout<<"   ";
+    for(int i =0;i<16;++i)
+        cout <<"-";
+    cout<<endl <<"   ";
+    for(int i =0 ;i<8;++i){
+        cout<<" "<<static_cast<char>('a'+i);
+    }
+     cout <<endl;   
 }
 
 int main(){
@@ -343,12 +352,13 @@ int main(){
     while(true){
             cout<< "enter move: ";
             cin >>cf>>cr>>tf>>tr;
+            cin.clear();
             coordinate cL(cf,cr);
             coordinate tL(tf,tr);
+            
 
-
-            board.update(cL,tL);
-            board.print();
+            if(board.update(cL,tL))
+                board.print();
 
     }
 
