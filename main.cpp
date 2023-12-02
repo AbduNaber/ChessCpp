@@ -52,8 +52,8 @@ class coordinate{
 class Piece{
     public:
 
-        Piece(): color(-1), type('d'),point(0),isUnderAttack(0){};
-        Piece(int pColor,char pType,coordinate pLocation,int pPoint) : color(pColor), type(pType),location(pLocation),point(pPoint),isUnderAttack(0){}; 
+        Piece(): color(-1), type('d'),point(0.0),isUnderAttack(0){};
+        Piece(int pColor,char pType,coordinate pLocation,double pPoint) : color(pColor), type(pType),location(pLocation),point(pPoint),isUnderAttack(0){}; 
         
         static Piece createRook(int pColor,coordinate pLocation) { return Piece(pColor,'r',pLocation,5); };
         static Piece createPawn(int pColor,coordinate pLocation) { return Piece(pColor,'p',pLocation,1); };
@@ -80,7 +80,7 @@ class Piece{
         int color ;
         char type;
         coordinate location;
-        int point;
+        double point;
         int isUnderAttack;
 };
 
@@ -134,9 +134,12 @@ bool Board::checkValidity(Piece checkingP, coordinate targetLocation){
 
     int tY = t[1];
     int tX = t[0]; 
+        
+
+
     int i,stop;
-    if (checkingP.type == (*this)[tX][tY].type ){
-              cout << "is here"<<endl;
+    if (checkingP.color == (*this)[tX][tY].color || checkingP.type == 'e'){
+
         return false;
     }
 
@@ -151,13 +154,13 @@ bool Board::checkValidity(Piece checkingP, coordinate targetLocation){
                 }
         case 'q':
                 if(targetLocation.file == checkingP.location.file) {
-                    cout << "is in here"<< endl;
+                    
                     i= cX>tX ? tX+1:cX+1 ;
                     stop = cX>tX ? cX:tX; 
                     for(i; i < stop;i++){
-                        cout <<"asd<"<<i<<stop<<endl;
+                        
                         if ((*this)[i][tY].type != 'e'){
-                            cout <<"2"<<endl;
+                            
                             return false;
                         }
                     }
@@ -167,7 +170,7 @@ bool Board::checkValidity(Piece checkingP, coordinate targetLocation){
                     for(int i;i<stop;i++){
                         cout <<i<<stop<<endl;    
                         if ((*this)[i][cX].type != 'e'){
-                            cout <<"1"<<endl;
+                           
                             return false;
                         }
                     }
@@ -207,14 +210,26 @@ bool Board::checkValidity(Piece checkingP, coordinate targetLocation){
                     false;
                 break;
         case 'p':
-                cout << "target is "<< (*this)[tX][tY].type << endl;
-                cout << tX<< tY << endl;
-                if(abs(tX-cX)== 1 &&(*this)[tX][tY].type == 'e')
+                
+                cout << cY <<cX << endl;
+                cout << tY <<tX << endl;
+
+                
+                cout << (*this)[tX][tY].type << endl;
+                cout << abs(tX-cX) << endl;
+                if(abs(tX-cX)== 1 &&(*this)[tX][tY].type == 'e'){
+                                        cout << "2test"<<endl;
+                    cout << "is here "<< endl ;
                     return true;
-                if(abs(tX-cX)== 2 && ( cY == 1 || cY==6  )&& (*this)[tX][tY].type == 'e')
+                }
+
+                if(abs(tX-cX)== 2 && ( cY == 1 || cY==6  )&& (*this)[tX][tY].type == 'e'){
+                                        cout << "1test"<<endl;
                     return true;
-                else 
-                    return false;    
+                }
+
+                cout << "test"<<endl;
+                return false;    
                 break;
 
 
