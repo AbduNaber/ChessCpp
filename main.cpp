@@ -1,10 +1,10 @@
 #include <iostream>
+#include <fstream>
 #include <vector>
 #include <string>
 #include <cstdlib>
 
 using namespace std;
-
 
 class coordinate;
 class Piece;
@@ -18,10 +18,12 @@ class coordinate{
         coordinate(char pFile, char pRank):  file(pFile) , rank(pRank){
             if(file <'a' || file > 'h' || rank > '8' || rank < '1'){
 
-                cout<< "invalide coordinant";
-                exit(1);
+                
+                ok = false;
 
             }
+            else    
+                ok = true;
 
         };
         coordinate setCoordinate(char f,char r);
@@ -41,11 +43,14 @@ class coordinate{
             out << "f: "<< c.file <<" r: "<<c.rank << endl; 
             return out;
         }
-
+    	
         friend class Board;
+        ~coordinate(){};
+        bool ok; // valid move
     private:
         char file;
         char rank;
+        
     
 };
 
@@ -55,12 +60,12 @@ class Piece{
         Piece(): color(-1), type('d'),point(0.0),isUnderAttack(false){};
         Piece(int pColor,char pType,coordinate pLocation,double pPoint) : color(pColor), type(pType),location(pLocation),point(pPoint),isUnderAttack(false){}; 
         
-        static Piece createRook(int pColor,coordinate pLocation) { return Piece(pColor,'r',pLocation,5); };
-        static Piece createPawn(int pColor,coordinate pLocation) { return Piece(pColor,'p',pLocation,1); };
-        static Piece createKnight(int pColor,coordinate pLocation) { return Piece(pColor,'n',pLocation,3); };
-        static Piece createBishop(int pColor,coordinate pLocation) { return Piece(pColor,'b',pLocation,3); };
-        static Piece createQueen(int pColor,coordinate pLocation) { return Piece(pColor,'q',pLocation,9); };
-        static Piece createKing(int pColor,coordinate pLocation) { return Piece(pColor,'k',pLocation,999); };
+        static Piece createRook(int pColor,coordinate pLocation) { return Piece(pColor,'r',pLocation,5.0); };
+        static Piece createPawn(int pColor,coordinate pLocation) { return Piece(pColor,'p',pLocation,1.0); };
+        static Piece createKnight(int pColor,coordinate pLocation) { return Piece(pColor,'n',pLocation,3.0); };
+        static Piece createBishop(int pColor,coordinate pLocation) { return Piece(pColor,'b',pLocation,3.0); };
+        static Piece createQueen(int pColor,coordinate pLocation) { return Piece(pColor,'q',pLocation,9.0); };
+        static Piece createKing(int pColor,coordinate pLocation) { return Piece(pColor,'k',pLocation,0); };
         static Piece createEmpty(coordinate pLocation) { return Piece(2,'e',pLocation,0); };
         
         friend class Board;
@@ -74,7 +79,7 @@ class Piece{
             return *this;
         };
          friend ostream&  operator<<(ostream& out, const Piece& p) {
-            out << p.type << " "<< p.location ;
+            out << p.type << " "<< p.location <<" p:"<<p.point<<" c:"<<p.color<< " a: "<<p.isUnderAttack;
             return out;
 
          }
@@ -97,15 +102,16 @@ class Board{
         Board& init();
 
         void print() const;
-
+        
         bool update(const coordinate cL, const coordinate tL);
         Board& check();
-        int saveToFile();
-        void setEmpty();
+        int saveToFile()const;
+        bool loadFromFile();
         bool checkValidity(Piece checkingP, coordinate targetLocation);
         void checkUnderAttack() ;
-
-
+        vector <double> calculatePoint() const ;
+        void CheckMate();
+        bool checkMateSim() const;
         const vector<Piece>& operator[](int index) const {
             return pieces[index];
         }
@@ -114,66 +120,352 @@ class Board{
         return pieces[index];
 
         }
-
+        void resetAP();
 
     private:
            
        vector<vector<Piece>> pieces; // pieces on 8x8 table.
 };  
 
+bool Board::loadFromFile(){
+
+    ifstream inF("board.txt");
+
+    if (!inF.is_open()) {
+            cout << "Error opening the board.txt"<< endl;
+            return false;
+        }
+    for(int row =0 ; row<8; ++row){
+        string line;
+        getline(inF, line);
+
+        if(line.size() != 19 ){
+            cout << "1corrupted file";
+            return false;
+        }
+         int col = 0;
+            for (int i = 4; i < line.size(); ++i) {
+                
+                if(line[i] == ' ')
+                    continue;
+
+                char pieceChar = line[i];
+                
+                // Assuming Piece::createEmpty creates an empty piece
+                pieces[row][col] = Piece::createEmpty(coordinate(row, col));
+
+                // Check the character and create the corresponding piece
+                switch (pieceChar) {
+                    case 'r':
+                        pieces[row][col] = Piece::createRook(0, coordinate(row, col));
+                        break;
+                    case 'n':
+                        pieces[row][col] = Piece::createKnight(0, coordinate(row, col));
+                        break;
+                    case 'b':
+                        pieces[row][col] = Piece::createBishop(0, coordinate(row, col));
+                        break;
+                    case 'q':
+                        pieces[row][col] = Piece::createQueen(0, coordinate(row, col));
+                        break;
+                    case 'k':
+                        pieces[row][col] = Piece::createKing(0, coordinate(row, col));
+                        break;
+                    case 'p':
+                        pieces[row][col] = Piece::createPawn(0, coordinate(row, col));
+                        break;
+                    case 'R':
+                        pieces[row][col] = Piece::createRook(1, coordinate(row, col));
+                        break;
+                    case 'N':
+                        pieces[row][col] = Piece::createKnight(1, coordinate(row, col));
+                        break;
+                    case 'B':
+                        pieces[row][col] = Piece::createBishop(1, coordinate(row, col));
+                        break;
+                    case 'Q':
+                        pieces[row][col] = Piece::createQueen(1, coordinate(row, col));
+                        break;
+                    case 'K':
+                        pieces[row][col] = Piece::createKing(1, coordinate(row, col));
+                        break;
+                    case 'P':
+                        pieces[row][col] = Piece::createPawn(1, coordinate(row, col));
+                        break;
+                    case '.':
+                        pieces[row][col] = Piece::createEmpty(coordinate(row, col));
+                        break;
+                    default:
+                        
+                        return false;
+                }
+
+                ++col;
+            }
+        }
+
+        inF.close();
+        cout << "succses";
+        return true;
+
+
+    }
+
+int Board::saveToFile()const{
+
+    ofstream outF("board.txt");
+    if (!outF.is_open()) {
+        cerr << "Error opening the board file!" << std::endl;
+        return 1;
+    }
+
+    for(int i =0;i<8;++i){
+        outF<< 8-i << " |";
+        for(int j=0;j<8;++j){
+
+            if( pieces[i][j].color == 2) {
+                outF<<" "<<".";
+            }
+            else if(pieces[i][j].color == 1 ){
+                 outF<<" "<< static_cast<char>(pieces[i][j].type-32) ;
+            }
+            else if(pieces[i][j].color == 0){
+                outF<<" "<< pieces[i][j].type;
+            }
+
+        }
+        outF << endl;
+    } 
+    outF<<"   ";
+    for(int i =0;i<16;++i)
+        outF <<"-";
+    outF<<endl <<"   ";
+    for(int i =0 ;i<8;++i){
+        outF<<" "<<static_cast<char>('a'+i);
+    }
+    outF <<endl; 
+    return 0;
+};
+
 void Board::checkUnderAttack() {
+    vector<int> currentLocation;
+    int tX, tY, tP;
 
-    vector <int> currentLoction;
-    int tX = currentLoction[0];
-    int tY = currentLoction[1];
-    for (vector <Piece> row: pieces){
-        for(Piece p: row){
+    for (vector<Piece> row : pieces) {
+        for (Piece p : row) {
 
-            currentLoction = p.location.coordinateToInt();
-            
-            switch(p.type){
+            if (p.type == 'e')
+                continue;
 
+            currentLocation = p.location.coordinateToInt();
+            tX = currentLocation[0];
+            tY = currentLocation[1];
+            tP = (*this)[tX][tY].color == 0 ? 1 : -1;
+
+            switch (p.type) {
                 case 'p':
                     
-                        if( p.location.file != 'a'){
-                            if(p.color == 0){
-                                if((*this)[tX+1][tY+1].type != 'e'){
-                                    (*this)[tX+1][tY+1].isUnderAttack = true;
-                                    (*this)[tX+1][tY+1].point = (*this)[tX+1][tY+1].point/2.0;
-                                }
-
-                            }
-                            else if (p.color == 1){
-
-                            }         
+                    if (p.location.file != 'a' && tX + tP >= 0 && tX + tP < 8 && tY - 1 >= 0) {
+                        
+                        if ((*this)[tX + tP][tY - 1].type != 'e' && (*this)[tX][tY].color != (*this)[tX + tP][tY - 1].color) {
+                            
+                            (*this)[tX + tP][tY - 1].isUnderAttack = true;
+                            
+                            (*this)[tX + tP][tY - 1].point /= 2.0;
                         }
-                        if(p.location.file != 'h'){
-                            if(p.color == 0){
-                                    
-                            }
-                            else if (p.color == 1){
+                    }
 
-                            }    
+                    if (p.location.file != 'h' && tX + tP >= 0 && tX + tP < 8 && tY + 1 < 8) {
+                        if ((*this)[tX + tP][tY + 1].type != 'e' && (*this)[tX][tY].color != (*this)[tX + tP][tY + 1].color) {
+                             
+                            (*this)[tX + tP][tY + 1].isUnderAttack = true;
+                            
+                            (*this)[tX + tP][tY + 1].point /= 2.0;
                         }
+                    }
 
-                    
-                    
-                case 'r':
+                    break;
 
                 case 'n':
+                
+                    for (int i : {-1, 1}) {
+                        for (int j : {-2, 2}) {
+                            int targetX = tX + i;
+                            int targetY = tY + j;
+                            if (targetX >= 0 && targetX < 8 && targetY >= 0 && targetY < 8 && (*this)[targetX][targetY].type != 'e') {
+                                if ((*this)[targetX][targetY].color != p.color) {
+                                    
+                                    (*this)[targetX][targetY].isUnderAttack = true;
+                                    (*this)[targetX][targetY].point /= 2.0;
+                                }
+                            }
 
-                case 'b':
+                            targetX = tX + j;
+                            targetY = tY + i;
+
+                            if (targetX >= 0 && targetX < 8 && targetY >= 0 && targetY < 8 && (*this)[targetX][targetY].type != 'e') {
+                                if ((*this)[targetX][targetY].color != p.color) {
+                                    
+                                    (*this)[targetX][targetY].isUnderAttack = true;
+                                    (*this)[targetX][targetY].point /= 2.0;
+                                }
+                            }
+                        }
+                    }
+                    break;
 
                 case 'q':
+                case 'r':
+                    for (int i = tX + 1; i < 8; i++) {
+                        if ((*this)[i][tY].type != 'e') {
+                            if ((*this)[i][tY].color != p.color) {
+                                (*this)[i][tY].isUnderAttack = true;
+                                cout <<"5"<<endl;
+                                (*this)[i][tY].point /= 2.0;
+                            }
+                            break;
+                        }
+                    }
+                    for (int i = tX - 1; i >= 0; i--) {
+                        if ((*this)[i][tY].type != 'e') {
+                            if ((*this)[i][tY].color != p.color) {
+                                (*this)[i][tY].isUnderAttack = true;
+                                (*this)[i][tY].point /= 2.0;
+                            }
+                            break;
+                        }
+                    }
+                    for (int j = tY + 1; j < 8; j++) {
+                        if ((*this)[tX][j].type != 'e') {
+                            if ((*this)[tX][j].color != p.color) {
+                                (*this)[tX][j].isUnderAttack = true;
+                                (*this)[tX][j].point /= 2.0;
+                            }
+                            break;
+                        }
+                    }
+                    for (int j = tY - 1; j >= 0; j--) {
+                        if ((*this)[tX][j].type != 'e') {
+                            if ((*this)[tX][j].color != p.color) {
+                                (*this)[tX][j].isUnderAttack = true;
+                                (*this)[tX][j].point /= 2.0;
+                            }
+                            break;
+                        }
+                    }
+                    if ((*this)[tX][tY].type == 'r')
+                        break;
+
+                case 'b':
+                    for (int i = 1; tX + i < 8 && tY + i < 8; ++i) {
+                        if ((*this)[tX + i][tY + i].type != 'e') {
+                            if ((*this)[tX + i][tY + i].color != p.color) {
+                                (*this)[tX + i][tY + i].isUnderAttack = true;
+                                (*this)[tX + i][tY + i].point /= 2.0;
+                            }
+                            break;
+                        }
+                    }
+
+                    for (int i = 1; tX - i >= 0 && tY + i < 8; ++i) {
+                        if ((*this)[tX - i][tY + i].type != 'e') {
+                            if ((*this)[tX - i][tY + i].color != p.color) {
+                                (*this)[tX - i][tY + i].isUnderAttack = true;
+                                (*this)[tX - i][tY + i].point /= 2.0;
+                            }
+                            break;
+                        }
+                    }
+
+                    for (int i = 1; tX + i < 8 && tY - i >= 0; ++i) {
+                        if ((*this)[tX + i][tY - i].type != 'e') {
+                            if ((*this)[tX + i][tY - i].color != p.color) {
+                                (*this)[tX + i][tY - i].isUnderAttack = true;
+                                (*this)[tX + i][tY - i].point /= 2.0;
+                            }
+                            break;
+                        }
+                    }
+
+                    for (int i = 1; tX - i >= 0 && tY - i >= 0; ++i) {
+                        if ((*this)[tX - i][tY - i].type != 'e') {
+                            if ((*this)[tX - i][tY - i].color != p.color) {
+                                (*this)[tX - i][tY - i].isUnderAttack = true;
+                                (*this)[tX - i][tY - i].point /= 2.0;
+                            }
+                            break;
+                        }
+                    }
+                    break;
 
                 case 'k':
+                    for (int i = -1; i <= 1; ++i) {
+                        for (int j = -1; j <= 1; ++j) {
+                            int targetX = tX + i;
+                            int targetY = tY + j;
 
+                            if (targetX >= 0 && targetX < 8 && targetY >= 0 && targetY < 8) {
+                                if ((*this)[targetX][targetY].type != 'e' && (*this)[targetX][targetY].color != p.color) {
+                                    (*this)[targetX][targetY].isUnderAttack = true;
+                                    (*this)[targetX][targetY].point /= 2.0;
+                                }
+                            }
+                        }
+                    }
+                    break;
             }
         }
     }
 }
 
+ vector <double> Board::calculatePoint() const {
 
+        double whitePoints = 0.0;
+        double blackPoints = 0.0;
+
+        for (const vector<Piece>& row : pieces) {
+            for (const Piece& p : row) {
+
+                if (p.color == 0) {
+                    blackPoints += p.point;
+
+                } 
+                else if (p.color == 1) {
+                    whitePoints += p.point;
+                }
+            }
+        }
+        vector <double> result = {blackPoints,whitePoints};
+        return result;
+ }
+
+void Board::resetAP() {
+
+    for (vector<Piece>& row : pieces) {
+        for (Piece& p : row) {
+                switch (p.type) {
+                    case 'p':
+                        p.point = 1.0;
+                        break;
+                    case 'n':
+                        p.point = 3.0;
+                        break;
+                    case 'b':
+                        p.point = 3.0;
+                        break;
+                    case 'r':
+                        p.point = 5.0;
+                        break;
+                    case 'q':
+                        p.point = 9.0;
+                        break;
+                    
+
+                }
+            p.isUnderAttack = false;
+            }
+        }
+    }
 
 bool Board::checkValidity(Piece checkingP, coordinate targetLocation){
 
@@ -366,6 +658,7 @@ bool Board::update(const coordinate cL, const coordinate tL){
         (*this).pieces[targetLocation[0]][targetLocation[1]]  =  (*this).pieces[currentLoction[0]][currentLoction[1]] ;
         (*this).pieces[currentLoction[0]][currentLoction[1]] = Piece::createEmpty(cL);
     }
+    cout << (*this).pieces[targetLocation[0]][targetLocation[1]]<<endl;
     return test;
 }
 void Board::print() const{
@@ -396,26 +689,147 @@ void Board::print() const{
     }
      cout <<endl;   
 }
+/*
 
-int main(){
+void Board::CheckMate(){
+    for (vector<Piece> &row : pieces) {
+        for (Piece& p :row) {
+
+            if(p.type != 'k')
+                continue;
+            
+            while(p.isUnderAttack == true){
+
+                string input;
+                cout << "enter move: ";
+                cin >> input;
+                if( input.size() != 4){
+                    continue;
+                }
+
+                coordinate cL(input[0],input[1]);
+
+                coordinate tL(input[2],input[3]);
+
+                if(!cL.ok || !tL.ok ){
+                    cout << "enter valid move! "<<endl;
+                    continue;
+                }
+
+                if(update(cL,tL))
+                    print();
+                
+                resetAP();
+                checkUnderAttack();
+
+                
+            }
+            
+            return;
+
+        }
+    }
+}
+*/
+bool Board::checkMateSim() const{
+     
+};
+
+class Game{
+    public:
+
+        static void help(){
+            cout << "help "<<endl;
+        };
+        
+        static int play(Board & board);
+        static string getInput(){
+                string input;
+                cout<< "enter move: ";
+                cin >>input;
+                return input;
+    
+            }
+        private:
+            
+    
+};
+int Game::play(Board & board){
+
+    string input;
+    int s;
+    while(true){
+    input = Game::getInput();
+    if(input == "quit"){
+                cout << "exit"<<endl;
+                return 0;
+            }
+            else if(input == "save"){
+                 
+                s = board.saveToFile();
+                cout << "saved status(0 is success): "<<s<<endl;
+                continue;
+            }  
+            else if (input =="load"){
+                s = board.loadFromFile();
+                cout << "load status(1 is success): "<<s<<endl;
+                board.print();
+                continue;
+            }  
+            else if(input == "point"){
+                const vector <double> r = board.calculatePoint();
+                cout << "POINT -> w: " << r[1] << " b: "<< r[0]<<endl;
+                continue;
+            }
+
+            else if(input == "suggest"){
+
+            }
+            else if(input == "help"){
+                Game::help();
+            }
+
+            else if(input.length() == 4){
+                cin.clear();
+
+                coordinate cL(input[0],input[1]);
+
+                coordinate tL(input[2],input[3]);
+                cout << cL;
+                cout <<tL<<endl;
+                if(cL.ok == false || tL.ok == false ){
+                    
+                    cout << "invalid coordinatee try again"<<endl;
+                    continue;
+                }
+
+                if(board.update(cL,tL))
+                    board.print();
+
+                board.resetAP();
+                board.checkUnderAttack();
+                board.CheckMate();
+                
+
+            }
+            else {
+                cout << "invalid input. "<<endl;
+            }
+}
+    return 0;
+}
+
+
+int main(){ 
 
     Board board;
 
     board.init();
     board.print();
-    char cr,cf,tf,tr;
-    while(true){
-            cout<< "enter move: ";
-            cin >>cf>>cr>>tf>>tr;
-            cin.clear();
-            coordinate cL(cf,cr);
-            coordinate tL(tf,tr);
-            
+    Game::play(board);
+    
+    
 
-            if(board.update(cL,tL))
-                board.print();
-
-    }
 
 }
 
