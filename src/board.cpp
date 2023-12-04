@@ -1,5 +1,5 @@
 
-#include "chess.h"
+#include "header/chess.h"
 
 vector <coordinate> Board::suggestion(int color){
     vector <coordinate> dummy = {coordinate(),coordinate()};

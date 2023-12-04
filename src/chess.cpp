@@ -1,4 +1,4 @@
-#include "chess.h"
+#include "header/chess.h"
 int Game::play(Board &board) {
     string input;
     int s;
