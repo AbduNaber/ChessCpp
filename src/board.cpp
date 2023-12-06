@@ -401,10 +401,11 @@ bool Board::checkValidity(Piece checkingP, coordinate targetLocation,int flag=1)
                         cout << "piece and target not same line vertically and horizontally"<<endl;
                     return false;
                 }
+        // broken movement fix that
         case 'q':
  
                 if(targetLocation.file == checkingP.location.file) {
-
+                        
 
                     for(i = cX>tX ? tX+1:cX+1; i < stop;i++){
                         
@@ -429,6 +430,7 @@ bool Board::checkValidity(Piece checkingP, coordinate targetLocation,int flag=1)
                 }
                 if(checkingP.type == 'r')
                     return true;
+        // broken movement fix that
         case 'b':
                
                 if (abs(cX - tX) == abs(cY - tY)) {
@@ -487,7 +489,9 @@ bool Board::checkValidity(Piece checkingP, coordinate targetLocation,int flag=1)
                                         
                     return true;
                 }
-
+                if(abs(tY-cY)== 1 && abs(cX-tX)== 1 &&(*this)[tX][tY].type != 'e')
+                    return true;
+                    
                 if(flag)
                     cout << "pawn movement is not legal"<<endl;
                 return false;    
