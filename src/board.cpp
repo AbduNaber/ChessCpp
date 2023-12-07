@@ -16,6 +16,7 @@ Piece Board::getPiece(const coordinate &cL) const{
 
 };
 
+// fix that 
 bool Board::loadFromFile(){
 
     ifstream inF("board.txt");
@@ -392,7 +393,7 @@ bool Board::checkValidity(Piece checkingP, coordinate targetLocation,int flag=1)
                 cout << "target is same piece or you choosed empty piece"<<endl;
         return false;
     }
-
+    int queenCounter =0;
     switch (checkingP.type){
           
         case 'r':
@@ -401,7 +402,7 @@ bool Board::checkValidity(Piece checkingP, coordinate targetLocation,int flag=1)
                         cout << "piece and target not same line vertically and horizontally"<<endl;
                     return false;
                 }
-        // broken movement fix that
+        
         case 'q':
  
                 if(targetLocation.file == checkingP.location.file) {
@@ -415,6 +416,7 @@ bool Board::checkValidity(Piece checkingP, coordinate targetLocation,int flag=1)
                             return false;
                         }
                     }
+                    return true;
                 }    
                 if(targetLocation.rank == checkingP.location.rank) {
                     
@@ -426,24 +428,27 @@ bool Board::checkValidity(Piece checkingP, coordinate targetLocation,int flag=1)
                             return false;
                         }
                     }
+                    return true;
 
                 }
-                if(checkingP.type == 'r')
-                    return true;
-        // broken movement fix that
+
+        
         case 'b':
                
                 if (abs(cX - tX) == abs(cY - tY)) {
 
                     int x = cX < tX ? 1 : -1;
                     int y = cY < tY ? 1 : -1;
-  
+                    cout<<"test";
                     for (int i = 1; i < abs(cX - tX); ++i) {
-                        if ((*this)[cX + i * x][cY + i * y].type != 'e') 
+                        if ((*this)[cX + i * x][cY + i * y].type != 'e') {
                             if(flag)
                                 cout << "between two pieces is not empty"<<endl;
                             return false;
-                    }
+                        }
+                            
+                    }  
+                    
                         return true;
                 } 
                 else {
