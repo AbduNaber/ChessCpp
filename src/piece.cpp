@@ -24,6 +24,7 @@ vector<int> coordinate::coordinateToInt() const {
             // convert coordinant system to vector index for checking piece and target location
             int y = file - 97;
             int x = 8- (rank -'0') ; 
+            
             vector<int> result= {x,y};
             return result;
 

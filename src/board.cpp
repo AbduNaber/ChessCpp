@@ -16,7 +16,6 @@ Piece Board::getPiece(const coordinate &cL) const{
 
 };
 
-// fix that 
 bool Board::loadFromFile(){
 
     ifstream inF("board.txt");
@@ -25,6 +24,7 @@ bool Board::loadFromFile(){
             cout << "Error opening the board.txt"<< endl;
             return false;
         }
+    char rank,file;
     for(int row =0 ; row<8; ++row){
         string line;
         getline(inF, line);
@@ -33,57 +33,59 @@ bool Board::loadFromFile(){
             cout << "1corrupted file";
             return false;
         }
-         int col = 0;
-            for (int i = 4; i < line.size(); ++i) {
-                
+        int col = 0;
+        rank = '0' +8-row ;
+        for (int i = 4; i < line.size(); ++i) {
+                file = 97+col;
                 if(line[i] == ' ')
                     continue;
 
                 char pieceChar = line[i];
                 
                 // Assuming Piece::createEmpty creates an empty piece
-                pieces[row][col] = Piece::createEmpty(coordinate(row, col));
+                pieces[row][col] = Piece::createEmpty(coordinate(file, rank));
 
                 // Check the character and create the corresponding piece
                 switch (pieceChar) {
+                    
                     case 'r':
-                        pieces[row][col] = Piece::createRook(0, coordinate(row, col));
+                        pieces[row][col] = Piece::createRook(0, coordinate(file, rank));
                         break;
                     case 'n':
-                        pieces[row][col] = Piece::createKnight(0, coordinate(row, col));
+                        pieces[row][col] = Piece::createKnight(0, coordinate(file, rank));
                         break;
                     case 'b':
-                        pieces[row][col] = Piece::createBishop(0, coordinate(row, col));
+                        pieces[row][col] = Piece::createBishop(0, coordinate(file, rank));
                         break;
                     case 'q':
-                        pieces[row][col] = Piece::createQueen(0, coordinate(row, col));
+                        pieces[row][col] = Piece::createQueen(0, coordinate(file, rank));
                         break;
                     case 'k':
-                        pieces[row][col] = Piece::createKing(0, coordinate(row, col));
+                        pieces[row][col] = Piece::createKing(0, coordinate(file, rank));
                         break;
                     case 'p':
-                        pieces[row][col] = Piece::createPawn(0, coordinate(row, col));
+                        pieces[row][col] = Piece::createPawn(0, coordinate(file, rank));
                         break;
                     case 'R':
-                        pieces[row][col] = Piece::createRook(1, coordinate(row, col));
+                        pieces[row][col] = Piece::createRook(1, coordinate(file, rank));
                         break;
                     case 'N':
-                        pieces[row][col] = Piece::createKnight(1, coordinate(row, col));
+                        pieces[row][col] = Piece::createKnight(1, coordinate(file, rank));
                         break;
                     case 'B':
-                        pieces[row][col] = Piece::createBishop(1, coordinate(row, col));
+                        pieces[row][col] = Piece::createBishop(1, coordinate(file, rank));
                         break;
                     case 'Q':
-                        pieces[row][col] = Piece::createQueen(1, coordinate(row, col));
+                        pieces[row][col] = Piece::createQueen(1, coordinate(file, rank));
                         break;
                     case 'K':
-                        pieces[row][col] = Piece::createKing(1, coordinate(row, col));
+                        pieces[row][col] = Piece::createKing(1, coordinate(file, rank));
                         break;
                     case 'P':
-                        pieces[row][col] = Piece::createPawn(1, coordinate(row, col));
+                        pieces[row][col] = Piece::createPawn(1, coordinate(file, rank));
                         break;
                     case '.':
-                        pieces[row][col] = Piece::createEmpty(coordinate(row, col));
+                        pieces[row][col] = Piece::createEmpty(coordinate(file, rank));
                         break;
                     default:
                         
@@ -96,6 +98,7 @@ bool Board::loadFromFile(){
 
         inF.close();
         cout << "succses";
+        
         return true;
 
 
